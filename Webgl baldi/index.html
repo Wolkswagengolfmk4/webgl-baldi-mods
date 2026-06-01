@@ -28,14 +28,18 @@
       const REPO_NAME = "webgl-baldi-mods";
       const BRANCH = "main";
 
+      // Fixed the space encoding for jsDelivr pathing
       var buildUrl = `https://cdn.jsdelivr.net/gh/${GITHUB_USERNAME}/${REPO_NAME}@${BRANCH}/Webgl%20baldi/Build`;
 
+      // Definining split parts array to be stitched together below
+      var dataParts = [
+        buildUrl + "/Webgl baldi.data.unityweb.part1",
+        buildUrl + "/Webgl baldi.data.unityweb.part2",
+        buildUrl + "/Webgl baldi.data.unityweb.part3"
+      ];
+
       var config = {
-        dataUrl: [
-          buildUrl + "/Webgl baldi.data.unityweb.part1",
-          buildUrl + "/Webgl baldi.data.unityweb.part2",
-          buildUrl + "/Webgl baldi.data.unityweb.part3"
-        ],
+        dataUrl: "", // Will be filled dynamically by the stitching script below
         frameworkUrl: buildUrl + "/Webgl baldi.framework.js.unityweb",
         codeUrl: buildUrl + "/Webgl baldi.wasm.unityweb",
         streamingAssetsUrl: `https://cdn.jsdelivr.net/gh/${GITHUB_USERNAME}/${REPO_NAME}@${BRANCH}/Webgl%20baldi/StreamingAssets`,
@@ -61,22 +65,36 @@
 
       canvas.style.width = "960px";
       canvas.style.height = "600px";
-
       loadingBar.style.display = "block";
 
-      var script = document.createElement("script");
-      script.src = buildUrl + "/Webgl baldi.loader.js";
-      script.onload = () => {
-        createUnityInstance(canvas, config, (progress) => {
-          progressBarFull.style.width = 100 * progress + "%";
-        }).then((unityInstance) => {
-          loadingBar.style.display = "none";
-          fullscreenButton.onclick = () => unityInstance.SetFullscreen(1);
-        }).catch((message) => {
-          alert("Error: " + message);
-        });
-      };
-      document.body.appendChild(script);
+      // 1. Download and stitch the split .data files together
+      Promise.all(dataParts.map(url => fetch(url).then(res => {
+        if (!res.ok) throw new Error(`Failed to load ${url}`);
+        return res.blob();
+      })))
+      .then(blobs => {
+        // Combine the parts into a single global blob
+        var combinedBlob = new Blob(blobs, { type: "application/octet-stream" });
+        config.dataUrl = URL.createObjectURL(combinedBlob);
+
+        // 2. Load the Unity engine script now that the data file is ready
+        var script = document.createElement("script");
+        script.src = buildUrl + "/Webgl baldi.loader.js";
+        script.onload = () => {
+          createUnityInstance(canvas, config, (progress) => {
+            progressBarFull.style.width = 100 * progress + "%";
+          }).then((unityInstance) => {
+            loadingBar.style.display = "none";
+            fullscreenButton.onclick = () => unityInstance.SetFullscreen(1);
+          }).catch((message) => {
+            alert("Unity Instance Error: " + message);
+          });
+        };
+        document.body.appendChild(script);
+      })
+      .catch(err => {
+        alert("CDN Loading Error: " + err.message);
+      });
     </script>
   </body>
 </html>
