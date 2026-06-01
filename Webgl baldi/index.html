@@ -2,36 +2,33 @@
 <html lang="en-us">
   <head>
     <meta charset="utf-8">
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <title>Baldi's Basics Classic</title>
-    <link rel="shortcut icon" href="TemplateData/favicon.ico">
-    <link rel="stylesheet" href="TemplateData/style.css">
+    <style>
+      body { margin:0; background:#000; overflow:hidden; }
+    </style>
   </head>
   <body>
     <div id="unity-container" class="unity-desktop">
-      <canvas id="unity-canvas" width=960 height=600></canvas>
+      <canvas id="unity-canvas" width="960" height="600"></canvas>
       <div id="unity-loading-bar">
         <div id="unity-logo"></div>
         <div id="unity-progress-bar-empty">
           <div id="unity-progress-bar-full"></div>
         </div>
       </div>
-      <div id="unity-warning"> </div>
+      <div id="unity-warning"></div>
       <div id="unity-footer">
-        <div id="unity-webgl-logo"></div>
         <div id="unity-fullscreen-button"></div>
         <div id="unity-build-title">Baldi's Basics Classic</div>
       </div>
     </div>
 
     <script>
-      // ================== YOUR INFO ==================
       const GITHUB_USERNAME = "Wolkswagengolfmk4";
       const REPO_NAME = "webgl-baldi-mods";
-      const BRANCH = "main";                    // Change to "master" only if your default branch is master
-      // ===============================================
+      const BRANCH = "main";
 
-      var buildUrl = `https://cdn.jsdelivr.net/gh/${GITHUB_USERNAME}/${REPO_NAME}@${BRANCH}/Build`;
+      var buildUrl = `https://cdn.jsdelivr.net/gh/${GITHUB_USERNAME}/${REPO_NAME}@${BRANCH}/Webgl%20baldi/Build`;
 
       var config = {
         dataUrl: [
@@ -41,14 +38,12 @@
         ],
         frameworkUrl: buildUrl + "/Webgl baldi.framework.js.unityweb",
         codeUrl: buildUrl + "/Webgl baldi.wasm.unityweb",
-        streamingAssetsUrl: `https://cdn.jsdelivr.net/gh/${GITHUB_USERNAME}/${REPO_NAME}@${BRANCH}/StreamingAssets`,
+        streamingAssetsUrl: `https://cdn.jsdelivr.net/gh/${GITHUB_USERNAME}/${REPO_NAME}@${BRANCH}/Webgl%20baldi/StreamingAssets`,
         companyName: "DefaultCompany",
         productName: "Baldi's Basics Classic",
         productVersion: "1.4.3",
-        showBanner: unityShowBanner,
       };
 
-      var container = document.querySelector("#unity-container");
       var canvas = document.querySelector("#unity-canvas");
       var loadingBar = document.querySelector("#unity-loading-bar");
       var progressBarFull = document.querySelector("#unity-progress-bar-full");
@@ -56,31 +51,19 @@
       var warningBanner = document.querySelector("#unity-warning");
 
       function unityShowBanner(msg, type) {
-        function updateBannerVisibility() {
-          warningBanner.style.display = warningBanner.children.length ? 'block' : 'none';
-        }
         var div = document.createElement('div');
         div.innerHTML = msg;
         warningBanner.appendChild(div);
-        if (type == 'error') div.style = 'background: red; padding: 10px;';
-        else if (type == 'warning') div.style = 'background: yellow; padding: 10px;';
-        updateBannerVisibility();
-        if (type !== 'error') {
-          setTimeout(() => {
-            warningBanner.removeChild(div);
-            updateBannerVisibility();
-          }, 5000);
-        }
+        if (type == 'error') div.style.background = 'red';
+        else if (type == 'warning') div.style.background = 'yellow';
+        if (type !== 'error') setTimeout(() => div.remove(), 5000);
       }
 
-      if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
-        unityShowBanner('WebGL builds are not supported on mobile devices.', 'warning');
-      } else {
-        canvas.style.width = "960px";
-        canvas.style.height = "600px";
-      }
+      canvas.style.width = "960px";
+      canvas.style.height = "600px";
 
       loadingBar.style.display = "block";
+
       var script = document.createElement("script");
       script.src = buildUrl + "/Webgl baldi.loader.js";
       script.onload = () => {
@@ -90,7 +73,7 @@
           loadingBar.style.display = "none";
           fullscreenButton.onclick = () => unityInstance.SetFullscreen(1);
         }).catch((message) => {
-          alert("Error loading game: " + message);
+          alert("Error: " + message);
         });
       };
       document.body.appendChild(script);
